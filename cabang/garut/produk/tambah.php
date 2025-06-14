@@ -1,0 +1,219 @@
+<?php
+/**
+ * Add new product page for Garut branch
+ */
+
+require_once __DIR__ . '/../../../includes/auth.php';
+require_once __DIR__ . '/../../../includes/functions.php';
+
+// Require login and check branch access
+requireLogin(CABANG_GARUT);
+
+$pageTitle = 'Tambah Produk';
+
+$message = '';
+$messageType = '';
+
+// Get categories and jenis durian
+$categories = getCategories();
+$jenisDurian = getJenisDurian();
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $data = [
+        'nama_produk' => sanitize($_POST['nama_produk']),
+        'kategori_id' => !empty($_POST['kategori_id']) ? (int)$_POST['kategori_id'] : null,
+        'jenis_durian_id' => !empty($_POST['jenis_durian_id']) ? (int)$_POST['jenis_durian_id'] : null,
+        'harga' => (float)$_POST['harga'],
+        'stok_tasik' => 0, // Default 0 for Garut admin
+        'stok_garut' => (int)$_POST['stok_garut'],
+        'satuan' => sanitize($_POST['satuan']),
+        'deskripsi' => sanitize($_POST['deskripsi'])
+    ];
+    
+    // Handle file upload
+    if (isset($_FILES['gambar']) && $_FILES['gambar']['error'] == UPLOAD_ERR_OK) {
+        try {
+            $data['gambar'] = handleFileUpload($_FILES['gambar']);
+        } catch (Exception $e) {
+            $message = $e->getMessage();
+            $messageType = 'danger';
+        }
+    }
+    
+    if (empty($message)) {
+        $result = addProduct($data);
+        $message = $result['message'];
+        $messageType = $result['success'] ? 'success' : 'danger';
+        
+        if ($result['success']) {
+            header("Location: index.php");
+            exit();
+        }
+    }
+}
+
+include __DIR__ . '/../../../includes/header.php';
+?>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-plus-circle"></i> Tambah Produk Baru</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="index.php" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Kembali
+        </a>
+    </div>
+</div>
+
+<?php if ($message): ?>
+    <div class="alert alert-<?= $messageType ?> alert-dismissible fade show" role="alert">
+        <i class="fas fa-<?= $messageType == 'success' ? 'check-circle' : 'exclamation-triangle' ?>"></i>
+        <?= $message ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Informasi Produk</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nama_produk" class="form-label">Nama Produk *</label>
+                                <input type="text" class="form-control" id="nama_produk" name="nama_produk" 
+                                       value="<?= isset($_POST['nama_produk']) ? htmlspecialchars($_POST['nama_produk']) : '' ?>" 
+                                       required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="kategori_id" class="form-label">Kategori</label>
+                                <select class="form-select" id="kategori_id" name="kategori_id">
+                                    <option value="">Pilih Kategori</option>
+                                    <?php foreach ($categories as $category): ?>
+                                        <option value="<?= $category['id'] ?>" 
+                                                <?= isset($_POST['kategori_id']) && $_POST['kategori_id'] == $category['id'] ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($category['nama_kategori']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="jenis_durian_id" class="form-label">Jenis Durian</label>
+                                <select class="form-select" id="jenis_durian_id" name="jenis_durian_id">
+                                    <option value="">Pilih Jenis Durian</option>
+                                    <?php foreach ($jenisDurian as $jenis): ?>
+                                        <option value="<?= $jenis['id'] ?>" 
+                                                <?= isset($_POST['jenis_durian_id']) && $_POST['jenis_durian_id'] == $jenis['id'] ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($jenis['nama_jenis']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="satuan" class="form-label">Satuan *</label>
+                                <select class="form-select" id="satuan" name="satuan" required>
+                                    <option value="">Pilih Satuan</option>
+                                    <option value="kg" <?= isset($_POST['satuan']) && $_POST['satuan'] == 'kg' ? 'selected' : '' ?>>Kilogram (kg)</option>
+                                    <option value="pcs" <?= isset($_POST['satuan']) && $_POST['satuan'] == 'pcs' ? 'selected' : '' ?>>Pieces (pcs)</option>
+                                    <option value="box" <?= isset($_POST['satuan']) && $_POST['satuan'] == 'box' ? 'selected' : '' ?>>Box</option>
+                                    <option value="cup" <?= isset($_POST['satuan']) && $_POST['satuan'] == 'cup' ? 'selected' : '' ?>>Cup</option>
+                                    <option value="gelas" <?= isset($_POST['satuan']) && $_POST['satuan'] == 'gelas' ? 'selected' : '' ?>>Gelas</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="harga" class="form-label">Harga (Rp) *</label>
+                                <input type="number" class="form-control" id="harga" name="harga" 
+                                       value="<?= isset($_POST['harga']) ? $_POST['harga'] : '' ?>" 
+                                       min="0" step="100" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="stok_garut" class="form-label">Stok Garut *</label>
+                                <input type="number" class="form-control" id="stok_garut" name="stok_garut" 
+                                       value="<?= isset($_POST['stok_garut']) ? $_POST['stok_garut'] : '0' ?>" 
+                                       min="0" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="deskripsi" class="form-label">Deskripsi</label>
+                        <textarea class="form-control" id="deskripsi" name="deskripsi" rows="3" 
+                                  placeholder="Deskripsi produk..."><?= isset($_POST['deskripsi']) ? htmlspecialchars($_POST['deskripsi']) : '' ?></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="gambar" class="form-label">Gambar Produk</label>
+                        <input type="file" class="form-control" id="gambar" name="gambar" 
+                               accept="image/jpeg,image/jpg,image/png,image/gif">
+                        <div class="form-text">Format: JPG, JPEG, PNG, GIF. Maksimal 2MB.</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="index.php" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times"></i> Batal
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Simpan Produk
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Tips Menambah Produk</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-lightbulb text-warning"></i>
+                        <small>Gunakan nama produk yang jelas dan mudah dipahami</small>
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-image text-info"></i>
+                        <small>Upload gambar berkualitas baik untuk menarik pelanggan</small>
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-tag text-success"></i>
+                        <small>Pilih kategori yang sesuai untuk memudahkan pencarian</small>
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-money-bill text-primary"></i>
+                        <small>Pastikan harga sudah sesuai dengan kualitas produk</small>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
