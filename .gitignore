@@ -1,0 +1,3 @@
+# Ignore all files in public/assets/receipts but keep the directory
+public/assets/receipts/*
+!public/assets/receipts/.gitkeep
