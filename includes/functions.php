@@ -86,16 +86,21 @@ function getProduct($id) {
 function addProduct($data) {
     try {
         $pdo = getConnection();
-        $stmt = $pdo->prepare("INSERT INTO produk (nama_produk, kategori_id, jenis_durian_id, harga, stok_tasik, stok_garut, satuan, deskripsi, gambar) 
-                              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $pdo->prepare("INSERT INTO produk (nama_produk, kategori_id, jenis_durian_id, harga, harga_per_kg, stok_tasik, stok_garut, total_kg_tasik, total_kg_garut, total_pcs_tasik, total_pcs_garut, satuan, deskripsi, gambar) 
+                              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         
         $stmt->execute([
             $data['nama_produk'],
             $data['kategori_id'] ?: null,
             $data['jenis_durian_id'] ?: null,
             $data['harga'],
+            $data['harga_per_kg'] ?? 0,
             $data['stok_tasik'] ?? 0,
             $data['stok_garut'] ?? 0,
+            $data['total_kg_tasik'] ?? 0,
+            $data['total_kg_garut'] ?? 0,
+            $data['total_pcs_tasik'] ?? 0,
+            $data['total_pcs_garut'] ?? 0,
             $data['satuan'],
             $data['deskripsi'],
             $data['gambar'] ?? null
@@ -104,7 +109,8 @@ function addProduct($data) {
         return [
             'success' => true,
             'message' => 'Produk berhasil ditambahkan!',
-            'id' => $pdo->lastInsertId()
+            'id' => $pdo->lastInsertId(),
+            'product_id' => $pdo->lastInsertId()
         ];
     } catch (Exception $e) {
         return [
@@ -123,8 +129,13 @@ function updateProduct($id, $data) {
                               kategori_id = ?, 
                               jenis_durian_id = ?, 
                               harga = ?, 
+                              harga_per_kg = ?,
                               stok_tasik = ?, 
-                              stok_garut = ?, 
+                              stok_garut = ?,
+                              total_kg_tasik = ?,
+                              total_kg_garut = ?,
+                              total_pcs_tasik = ?,
+                              total_pcs_garut = ?,
                               satuan = ?, 
                               deskripsi = ?, 
                               gambar = ?,
@@ -136,8 +147,13 @@ function updateProduct($id, $data) {
             $data['kategori_id'] ?: null,
             $data['jenis_durian_id'] ?: null,
             $data['harga'],
+            $data['harga_per_kg'] ?? 0,
             $data['stok_tasik'] ?? 0,
             $data['stok_garut'] ?? 0,
+            $data['total_kg_tasik'] ?? 0,
+            $data['total_kg_garut'] ?? 0,
+            $data['total_pcs_tasik'] ?? 0,
+            $data['total_pcs_garut'] ?? 0,
             $data['satuan'],
             $data['deskripsi'],
             $data['gambar'],
@@ -184,18 +200,26 @@ function getDashboardStats($cabang_id) {
         $stmt = $pdo->query("SELECT COUNT(*) as total FROM produk WHERE status = 'aktif'");
         $totalProducts = $stmt->fetch()['total'];
         
-        // Total stock for branch
+        // Total stock for branch (pcs)
         if ($cabang_id == CABANG_TASIK) {
             $stmt = $pdo->query("SELECT SUM(stok_tasik) as total FROM produk WHERE status = 'aktif'");
-        } else {
-            $stmt = $pdo->query("SELECT SUM(stok_garut) as total FROM produk WHERE status = 'aktif'");
-        }
-        $totalStock = $stmt->fetch()['total'] ?? 0;
-        
-        // Low stock products (< 5)
-        if ($cabang_id == CABANG_TASIK) {
+            $totalStock = $stmt->fetch()['total'] ?? 0;
+            
+            // Total weight (kg) for branch
+            $stmt = $pdo->query("SELECT SUM(total_kg_tasik) as total FROM produk WHERE status = 'aktif'");
+            $totalWeight = $stmt->fetch()['total'] ?? 0;
+            
+            // Low stock products (< 5)
             $stmt = $pdo->query("SELECT COUNT(*) as total FROM produk WHERE status = 'aktif' AND stok_tasik < 5");
         } else {
+            $stmt = $pdo->query("SELECT SUM(stok_garut) as total FROM produk WHERE status = 'aktif'");
+            $totalStock = $stmt->fetch()['total'] ?? 0;
+            
+            // Total weight (kg) for branch
+            $stmt = $pdo->query("SELECT SUM(total_kg_garut) as total FROM produk WHERE status = 'aktif'");
+            $totalWeight = $stmt->fetch()['total'] ?? 0;
+            
+            // Low stock products (< 5)
             $stmt = $pdo->query("SELECT COUNT(*) as total FROM produk WHERE status = 'aktif' AND stok_garut < 5");
         }
         $lowStock = $stmt->fetch()['total'];
@@ -207,6 +231,7 @@ function getDashboardStats($cabang_id) {
         return [
             'total_products' => $totalProducts,
             'total_stock' => $totalStock,
+            'total_weight' => $totalWeight,
             'low_stock' => $lowStock,
             'total_categories' => $totalCategories
         ];
@@ -214,6 +239,7 @@ function getDashboardStats($cabang_id) {
         return [
             'total_products' => 0,
             'total_stock' => 0,
+            'total_weight' => 0,
             'low_stock' => 0,
             'total_categories' => 0
         ];

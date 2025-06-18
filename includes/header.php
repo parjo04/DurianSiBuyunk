@@ -127,8 +127,19 @@ if ($currentUser) {
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link <?= strpos($_SERVER['PHP_SELF'], '/manajemen-stok/') !== false ? 'active' : '' ?>" href="../manajemen-stok/">
+                                <i class="fas fa-warehouse"></i> Kelola Stok
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link <?= strpos($_SERVER['PHP_SELF'], '/kategori/') !== false ? 'active' : '' ?>" href="../kategori/">
                                 <i class="fas fa-tags"></i> Kelola Kategori
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?= strpos($_SERVER['PHP_SELF'], '/laporan/') !== false ? 'active' : '' ?>" href="../laporan/">
+                                <i class="fas fa-chart-bar me-2"></i>
+                                Laporan & Analisis
                             </a>
                         </li>
                         <!-- <li class="nav-item">
