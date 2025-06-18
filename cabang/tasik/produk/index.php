@@ -92,7 +92,8 @@ include __DIR__ . '/../../../includes/header.php';
                             <th>Jenis Durian</th>
                             <th>Harga</th>
                             <th>Stok Tasik</th>
-                            <th>Satuan</th>
+                            <th>Bobot (kg)</th>
+                            <th>Harga/kg</th>
                             <th>Status</th>
                             <th>Aksi</th>
                         </tr>
@@ -134,10 +135,31 @@ include __DIR__ . '/../../../includes/header.php';
                                 <td><?= formatRupiah($product['harga']) ?></td>
                                 <td>
                                     <span class="badge <?= $product['stok'] < 5 ? 'bg-danger' : ($product['stok'] < 10 ? 'bg-warning' : 'bg-success') ?>">
-                                        <?= $product['stok'] ?>
+                                        <?= $product['stok'] ?> pcs
                                     </span>
+                                    <?php if ($product['satuan']): ?>
+                                        <br><small class="text-muted"><?= htmlspecialchars($product['satuan']) ?></small>
+                                    <?php endif; ?>
                                 </td>
-                                <td><?= htmlspecialchars($product['satuan']) ?></td>
+                                <td>
+                                    <span class="text-success fw-bold">
+                                        <?= number_format($product['total_kg_tasik'], 3) ?> kg
+                                    </span>
+                                    <?php if ($product['stok'] > 0): ?>
+                                        <br><small class="text-muted">
+                                            ~<?= number_format($product['total_kg_tasik'] / $product['stok'], 3) ?> kg/pcs
+                                        </small>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php if ($product['harga_per_kg']): ?>
+                                        <span class="text-primary fw-bold">
+                                            <?= formatRupiah($product['harga_per_kg']) ?>/kg
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="text-muted">-</span>
+                                    <?php endif; ?>
+                                </td>
                                 <td>
                                     <?php if ($product['stok'] == 0): ?>
                                         <span class="badge bg-danger">Habis</span>
@@ -152,6 +174,11 @@ include __DIR__ . '/../../../includes/header.php';
                                         <a href="edit.php?id=<?= $product['id'] ?>" class="btn btn-outline-primary" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
+                                        <button type="button" class="btn btn-outline-info" 
+                                                onclick="openStockModal(<?= $product['id'] ?>, '<?= htmlspecialchars($product['nama_produk']) ?>', <?= $product['stok_tasik'] ?>)" 
+                                                title="Update Stok">
+                                            <i class="fas fa-cubes"></i>
+                                        </button>
                                         <a href="hapus.php?id=<?= $product['id'] ?>" class="btn btn-outline-danger" 
                                            onclick="return confirm('Yakin ingin menghapus produk ini?')" title="Hapus">
                                             <i class="fas fa-trash"></i>
@@ -167,11 +194,180 @@ include __DIR__ . '/../../../includes/header.php';
     </div>
 </div>
 
+<!-- Stock Update Modal -->
+<div class="modal fade" id="stockModal" tabindex="-1" aria-labelledby="stockModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="stockModalLabel">
+                    <i class="fas fa-cubes"></i> Update Stok Produk
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="stockForm">
+                <div class="modal-body">
+                    <input type="hidden" id="produk_id" name="produk_id">
+                    
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Produk:</strong></label>
+                        <p id="produk_nama" class="text-muted"></p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Stok Saat Ini:</label>
+                        <div class="row">
+                            <div class="col-6">
+                                <p id="stok_lama_pcs" class="fw-bold text-primary">0 pcs</p>
+                            </div>
+                            <div class="col-6">
+                                <p id="stok_lama_kg" class="fw-bold text-success">0.000 kg</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label for="bobot_kg" class="form-label">Bobot (kg) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="bobot_kg" name="bobot_kg" 
+                                       step="0.001" min="0" required>
+                                <div class="form-text">Bobot total dalam kilogram</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label for="jumlah_pcs" class="form-label">Jumlah (pcs) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="jumlah_pcs" name="jumlah_pcs" 
+                                       min="1" required>
+                                <div class="form-text">Jumlah buah/pieces</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="operation" id="operation_add" value="add" checked>
+                            <label class="form-check-label" for="operation_add">
+                                <i class="fas fa-plus text-success"></i> Tambah Stok
+                            </label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="operation" id="operation_reduce" value="reduce">
+                            <label class="form-check-label" for="operation_reduce">
+                                <i class="fas fa-minus text-danger"></i> Kurangi Stok
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="keterangan" class="form-label">Keterangan</label>
+                        <textarea class="form-control" id="keterangan" name="keterangan" 
+                                  rows="3" placeholder="Alasan perubahan stok (opsional)"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Update Stok
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
                 </div>
             </main>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        function openStockModal(produkId, namaProduk, stokLama) {
+            document.getElementById('produk_id').value = produkId;
+            document.getElementById('produk_nama').textContent = namaProduk;
+            
+            // Fetch current stock with weight data
+            fetch('get_stock_info.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ produk_id: produkId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('stok_lama_pcs').textContent = `${data.total_pcs} pcs`;
+                    document.getElementById('stok_lama_kg').textContent = `${data.total_kg} kg`;
+                } else {
+                    document.getElementById('stok_lama_pcs').textContent = `${stokLama} pcs`;
+                    document.getElementById('stok_lama_kg').textContent = '0.000 kg';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('stok_lama_pcs').textContent = `${stokLama} pcs`;
+                document.getElementById('stok_lama_kg').textContent = '0.000 kg';
+            });
+            
+            // Reset form
+            document.getElementById('bobot_kg').value = '';
+            document.getElementById('jumlah_pcs').value = '';
+            document.getElementById('keterangan').value = '';
+            document.getElementById('operation_add').checked = true;
+            
+            const modal = new bootstrap.Modal(document.getElementById('stockModal'));
+            modal.show();
+        }
+        
+        // Wait for DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            const stockForm = document.getElementById('stockForm');
+            if (stockForm) {
+                stockForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(this);
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.innerHTML;
+                    
+                    // Disable button and show loading
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+                    
+                    fetch('update_stok.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Show success message
+                            alert('Stok berhasil diperbarui!');
+                            
+                            // Close modal
+                            bootstrap.Modal.getInstance(document.getElementById('stockModal')).hide();
+                            
+                            // Reload page to show updated data
+                            window.location.reload();
+                        } else {
+                            alert('Error: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Terjadi kesalahan saat memperbarui stok');
+                    })
+                    .finally(() => {
+                        // Re-enable button
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    });
+                });
+            }
+        });
+    </script>
 </body>
 </html>

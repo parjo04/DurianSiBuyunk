@@ -5,6 +5,7 @@
 
 require_once __DIR__ . '/../../../includes/auth.php';
 require_once __DIR__ . '/../../../includes/functions.php';
+require_once __DIR__ . '/../../../includes/report_functions_simple.php';
 
 // Require login and check branch access
 requireLogin(CABANG_TASIK);
@@ -37,8 +38,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'kategori_id' => !empty($_POST['kategori_id']) ? (int)$_POST['kategori_id'] : null,
         'jenis_durian_id' => !empty($_POST['jenis_durian_id']) ? (int)$_POST['jenis_durian_id'] : null,
         'harga' => (float)$_POST['harga'],
+        'harga_per_kg' => (float)($_POST['harga_per_kg'] ?? $product['harga_per_kg']),
         'stok_tasik' => (int)$_POST['stok_tasik'],
         'stok_garut' => $product['stok_garut'], // Keep existing Garut stock
+        'total_kg_tasik' => (float)($_POST['total_kg_tasik'] ?? $product['total_kg_tasik']),
+        'total_kg_garut' => $product['total_kg_garut'], // Keep existing Garut weight
+        'total_pcs_tasik' => (int)$_POST['stok_tasik'], // Update with new stock
+        'total_pcs_garut' => $product['total_pcs_garut'], // Keep existing Garut pieces
         'satuan' => sanitize($_POST['satuan']),
         'deskripsi' => sanitize($_POST['deskripsi']),
         'gambar' => $product['gambar'] // Keep existing image by default
@@ -59,9 +65,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
     
     if (empty($message)) {
+        // Simpan stok lama untuk logging
+        $stok_lama = $product['stok_tasik'];
+        $stok_baru = $data['stok_tasik'];
+        
         $result = updateProduct($id, $data);
         $message = $result['message'];
         $messageType = $result['success'] ? 'success' : 'danger';
+        
+        // Log pergerakan stok jika ada perubahan
+        if ($result['success'] && $stok_lama != $stok_baru) {
+            $jenis_pergerakan = 'update';
+            if ($stok_baru > $stok_lama) {
+                $jenis_pergerakan = 'masuk';
+            } elseif ($stok_baru < $stok_lama) {
+                $jenis_pergerakan = 'keluar';
+            }
+            
+            $keterangan = "Update produk: {$product['nama_produk']} (Edit via form)";
+            logStokHistory($id, 'tasik', $jenis_pergerakan, $stok_lama, $stok_baru, $keterangan, $_SESSION['user_id']);
+        }
         
         if ($result['success']) {
             header("Location: index.php");
@@ -156,20 +179,52 @@ include __DIR__ . '/../../../includes/header.php';
                     </div>
                     
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="mb-3">
-                                <label for="harga" class="form-label">Harga (Rp) *</label>
+                                <label for="harga" class="form-label">Harga Satuan (Rp) *</label>
                                 <input type="number" class="form-control" id="harga" name="harga" 
                                        value="<?= isset($_POST['harga']) ? $_POST['harga'] : $product['harga'] ?>" 
                                        min="0" step="100" required>
+                                <div class="form-text">Harga per satuan produk</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="harga_per_kg" class="form-label">Harga per Kg (Rp) *</label>
+                                <input type="number" class="form-control" id="harga_per_kg" name="harga_per_kg" 
+                                       value="<?= isset($_POST['harga_per_kg']) ? $_POST['harga_per_kg'] : $product['harga_per_kg'] ?>" 
+                                       min="0" step="100" required>
+                                <div class="form-text">Harga per kilogram</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="stok_tasik" class="form-label">Stok Tasik (pcs) *</label>
+                                <input type="number" class="form-control" id="stok_tasik" name="stok_tasik" 
+                                       value="<?= isset($_POST['stok_tasik']) ? $_POST['stok_tasik'] : $product['stok_tasik'] ?>" 
+                                       min="0" required>
+                                <div class="form-text">Jumlah buah/pieces</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="total_kg_tasik" class="form-label">Bobot Total (kg) *</label>
+                                <input type="number" class="form-control" id="total_kg_tasik" name="total_kg_tasik" 
+                                       value="<?= isset($_POST['total_kg_tasik']) ? $_POST['total_kg_tasik'] : $product['total_kg_tasik'] ?>" 
+                                       step="0.001" min="0" required>
+                                <div class="form-text">Total berat dalam kilogram</div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="stok_tasik" class="form-label">Stok Tasikmalaya *</label>
-                                <input type="number" class="form-control" id="stok_tasik" name="stok_tasik" 
-                                       value="<?= isset($_POST['stok_tasik']) ? $_POST['stok_tasik'] : $product['stok_tasik'] ?>" 
-                                       min="0" required>
+                                <label class="form-label">Rata-rata Bobot per Buah</label>
+                                <div class="form-control-plaintext" id="avg_weight_display_edit_tasik">
+                                    <span class="text-muted">0.000 kg/buah</span>
+                                </div>
+                                <div class="form-text">Otomatis dihitung dari total kg ÷ jumlah pcs</div>
                             </div>
                         </div>
                     </div>
@@ -243,5 +298,25 @@ include __DIR__ . '/../../../includes/header.php';
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Calculate average weight for Tasik edit
+        function calculateAverageWeightTasik() {
+            const totalKg = parseFloat(document.getElementById('total_kg_tasik').value) || 0;
+            const totalPcs = parseInt(document.getElementById('stok_tasik').value) || 0;
+            
+            const avgWeight = totalPcs > 0 ? totalKg / totalPcs : 0;
+            document.getElementById('avg_weight_display_edit_tasik').innerHTML = 
+                `<span class="text-${avgWeight > 0 ? 'success' : 'muted'}">${avgWeight.toFixed(3)} kg/buah</span>`;
+        }
+        
+        // Add event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('total_kg_tasik').addEventListener('input', calculateAverageWeightTasik);
+            document.getElementById('stok_tasik').addEventListener('input', calculateAverageWeightTasik);
+            
+            // Calculate initial average
+            calculateAverageWeightTasik();
+        });
+    </script>
 </body>
 </html>
