@@ -1,3 +1,5 @@
 # Ignore all files in public/assets/receipts but keep the directory
 public/assets/receipts/*
 !public/assets/receipts/.gitkeep
+cabang/tasik/public/assets/images/products/
+cabang/garut/public/assets/images/products/
