@@ -63,11 +63,16 @@ $products = getProducts($cabang_filter, $kategori_id, $search);
             border-radius: 12px;
             overflow: hidden;
             height: 100%;
+            cursor: pointer;
         }
         
         .product-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .product-card:hover .product-image {
+            transform: scale(1.05);
         }
         
         .product-image {
@@ -79,6 +84,7 @@ $products = getProducts($cabang_filter, $kategori_id, $search);
             justify-content: center;
             font-size: 3rem;
             color: #6c757d;
+            transition: transform 0.3s ease;
         }
         
         .price-tag {
@@ -288,7 +294,9 @@ $products = getProducts($cabang_filter, $kategori_id, $search);
             <?php else: ?>
                 <?php foreach ($products as $product): ?>
                     <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                        <div class="card product-card h-100 position-relative">
+                        <div class="card product-card h-100 position-relative" 
+                             style="cursor: pointer;" 
+                             onclick="window.location.href='detail.php?id=<?= $product['id'] ?>'">
                             <!-- Branch Badge -->
                             <?php if (!$cabang_filter): ?>
                                 <div class="branch-badge branch-tasik">
@@ -362,12 +370,18 @@ $products = getProducts($cabang_filter, $kategori_id, $search);
                                         <span class="badge bg-success">
                                             <i class="fas fa-check"></i> Tersedia
                                         </span>
+                                        <small class="text-primary ms-2">
+                                            <i class="fas fa-eye"></i> Lihat Detail
+                                        </small>
                                     </div>
                                 <?php else: ?>
                                     <div class="mt-2">
                                         <span class="badge bg-danger">
                                             <i class="fas fa-times"></i> Stok Habis
                                         </span>
+                                        <small class="text-primary ms-2">
+                                            <i class="fas fa-eye"></i> Lihat Detail
+                                        </small>
                                     </div>
                                 <?php endif; ?>
                             </div>
