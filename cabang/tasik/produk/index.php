@@ -90,8 +90,10 @@ include __DIR__ . '/../../../includes/header.php';
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-3">
-                                    <?php if ($product['gambar'] && file_exists("../../../public/assets/images/products/" . $product['gambar'])): ?>
-                                        <img src="../../../public/assets/images/products/<?= $product['gambar'] ?>"
+                                    <?php 
+                                    $imagePath = getImagePath($product['gambar']);
+                                    if ($imagePath && file_exists("../../../" . $imagePath)): ?>
+                                        <img src="../../../<?= $imagePath ?>?v=<?= time() ?>"
                                             class="img-thumbnail w-100" style="height: 60px; object-fit: cover;">
                                     <?php else: ?>
                                         <div class="bg-light d-flex align-items-center justify-content-center"
@@ -168,8 +170,10 @@ include __DIR__ . '/../../../includes/header.php';
                             <?php foreach ($products as $product): ?>
                                 <tr>
                                     <td>
-                                        <?php if ($product['gambar'] && file_exists("../../../public/assets/images/products/" . $product['gambar'])): ?>
-                                            <img src="../../../public/assets/images/products/<?= $product['gambar'] ?>"
+                                        <?php 
+                                        $imagePath = getImagePath($product['gambar']);
+                                        if ($imagePath && file_exists("../../../" . $imagePath)): ?>
+                                            <img src="../../../<?= $imagePath ?>?v=<?= time() ?>"
                                                 class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
                                         <?php else: ?>
                                             <div class="bg-light d-flex align-items-center justify-content-center"

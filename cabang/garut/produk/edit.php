@@ -53,10 +53,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Handle file upload
     if (isset($_FILES['gambar']) && $_FILES['gambar']['error'] == UPLOAD_ERR_OK) {
         try {
-            $data['gambar'] = handleFileUpload($_FILES['gambar']);
+            $data['gambar'] = handleFileUpload($_FILES['gambar'], 'garut');
             // Delete old image if exists
-            if ($product['gambar'] && file_exists("../../../public/assets/images/products/" . $product['gambar'])) {
-                unlink("../../../public/assets/images/products/" . $product['gambar']);
+            $oldImagePath = getImagePath($product['gambar']);
+            if ($product['gambar'] && $oldImagePath) {
+                $fullOldPath = __DIR__ . "/../../../" . $oldImagePath;
+                if (file_exists($fullOldPath)) {
+                    unlink($fullOldPath);
+                }
             }
         } catch (Exception $e) {
             $message = $e->getMessage();
@@ -238,9 +242,11 @@ include __DIR__ . '/../../../includes/header.php';
                     
                     <div class="mb-3">
                         <label for="gambar" class="form-label">Gambar Produk</label>
-                        <?php if ($product['gambar'] && file_exists("../../../public/assets/images/products/" . $product['gambar'])): ?>
+                        <?php 
+                        $imagePath = getImagePath($product['gambar']);
+                        if ($imagePath && file_exists("../../../" . $imagePath)): ?>
                             <div class="mb-2">
-                                <img src="../../../public/assets/images/products/<?= $product['gambar'] ?>" 
+                                <img src="../../../<?= $imagePath ?>?v=<?= time() ?>" 
                                      class="img-thumbnail" style="max-width: 200px;">
                                 <div class="form-text">Gambar saat ini</div>
                             </div>

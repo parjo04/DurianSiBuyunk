@@ -312,8 +312,10 @@ $products = getProducts($cabang_filter, $kategori_id, $search);
                             <?php endif; ?>
                             
                             <div class="product-image">
-                                <?php if ($product['gambar'] && file_exists("public/assets/images/products/" . $product['gambar'])): ?>
-                                    <img src="public/assets/images/products/<?= $product['gambar'] ?>" 
+                                <?php 
+                                $imageUrl = getImageUrl($product['gambar']);
+                                if ($imageUrl): ?>
+                                    <img src="<?= $imageUrl ?>" 
                                          class="card-img-top product-image" 
                                          alt="<?= htmlspecialchars($product['nama_produk']) ?>">
                                 <?php else: ?>

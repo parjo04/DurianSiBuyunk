@@ -253,10 +253,25 @@ function getDashboardStats($cabang_id) {
     }
 }
 
-// Handle file upload
-function handleFileUpload($file, $uploadDir = UPLOAD_PATH) {
+// Handle file upload with branch support
+function handleFileUpload($file, $branch = null, $uploadDir = null) {
     if (!isset($file) || $file['error'] !== UPLOAD_ERR_OK) {
         return null;
+    }
+    
+    // Determine branch from session if not provided
+    if (!$branch && isset($_SESSION['user']['cabang_id'])) {
+        $branch = $_SESSION['user']['cabang_id'] == CABANG_TASIK ? 'tasik' : 'garut';
+    }
+    
+    // Set upload directory based on branch
+    if (!$uploadDir) {
+        $baseDir = __DIR__ . '/../public/assets/images/products/';
+        if ($branch) {
+            $uploadDir = $baseDir . $branch . '/';
+        } else {
+            $uploadDir = $baseDir;
+        }
     }
     
     $fileName = $file['name'];
@@ -274,8 +289,9 @@ function handleFileUpload($file, $uploadDir = UPLOAD_PATH) {
         throw new Exception('Ukuran file terlalu besar. Maksimal 2MB.');
     }
     
-    // Create unique filename
-    $newFileName = uniqid() . '_' . time() . '.' . $fileExt;
+    // Create unique filename with branch prefix
+    $prefix = $branch ? $branch . '_' : '';
+    $newFileName = $prefix . uniqid() . '_' . time() . '.' . $fileExt;
     $uploadPath = $uploadDir . $newFileName;
     
     // Create directory if not exists
@@ -285,10 +301,50 @@ function handleFileUpload($file, $uploadDir = UPLOAD_PATH) {
     
     // Move uploaded file
     if (move_uploaded_file($fileTmp, $uploadPath)) {
-        return $newFileName;
+        // Return relative path from public directory
+        return ($branch ? $branch . '/' : '') . $newFileName;
     } else {
         throw new Exception('Gagal mengupload file.');
     }
+}
+
+// Get image path for display with cache busting
+function getImagePath($imageName, $branch = null) {
+    if (!$imageName) return null;
+    
+    // Check if image already has branch prefix in path
+    if (strpos($imageName, '/') !== false) {
+        $path = "public/assets/images/products/" . $imageName;
+    } else {
+        // For backward compatibility, check in multiple locations
+        $possiblePaths = [
+            "public/assets/images/products/" . $imageName, // Main folder
+            "public/assets/images/products/tasik/" . $imageName, // Tasik folder
+            "public/assets/images/products/garut/" . $imageName, // Garut folder
+        ];
+        
+        $path = null;
+        foreach ($possiblePaths as $testPath) {
+            if (file_exists($testPath)) {
+                $path = $testPath;
+                break;
+            }
+        }
+    }
+    
+    return $path;
+}
+
+// Get image URL with cache busting timestamp
+function getImageUrl($imageName, $branch = null) {
+    $imagePath = getImagePath($imageName, $branch);
+    if (!$imagePath || !file_exists($imagePath)) {
+        return null;
+    }
+    
+    // Add timestamp for cache busting
+    $timestamp = filemtime($imagePath);
+    return $imagePath . '?v=' . $timestamp;
 }
 
 // Note: formatRupiah() and sanitize() functions are already defined in config/config.php

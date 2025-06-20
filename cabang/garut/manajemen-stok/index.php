@@ -152,8 +152,10 @@ include __DIR__ . '/../../../includes/header.php';
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-3">
-                                    <?php if ($product['gambar'] && file_exists("../../../public/assets/images/products/" . $product['gambar'])): ?>
-                                        <img src="../../../public/assets/images/products/<?= $product['gambar'] ?>" 
+                                    <?php 
+                                    $imageUrl = getImageUrl($product['gambar']);
+                                    if ($imageUrl): ?>
+                                        <img src="../../../<?= $imageUrl ?>" 
                                              class="img-thumbnail w-100" style="height: 50px; object-fit: cover;">
                                     <?php else: ?>
                                         <div class="bg-light d-flex align-items-center justify-content-center" 
@@ -232,8 +234,10 @@ include __DIR__ . '/../../../includes/header.php';
                             <tr>
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        <?php if ($product['gambar'] && file_exists("../../../public/assets/images/products/" . $product['gambar'])): ?>
-                                            <img src="../../../public/assets/images/products/<?= $product['gambar'] ?>" 
+                                        <?php 
+                                        $imageUrl = getImageUrl($product['gambar']);
+                                        if ($imageUrl): ?>
+                                            <img src="../../../<?= $imageUrl ?>" 
                                                  class="img-thumbnail me-3" style="width: 60px; height: 60px; object-fit: cover;">
                                         <?php else: ?>
                                             <div class="bg-light d-flex align-items-center justify-content-center me-3" 

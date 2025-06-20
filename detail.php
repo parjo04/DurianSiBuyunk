@@ -321,30 +321,9 @@ $pageTitle = htmlspecialchars($product['nama_produk']) . ' - Durian Si Buyunk';
             <div class="col-lg-5 mb-3">
                 <div class="product-image-container">
                     <?php 
-                    $imageFound = false;
-                    $imagePath = '';
-                    
-                    if ($product['gambar']) {
-                        // Check multiple possible image locations
-                        $possiblePaths = [
-                            "assets/images/products/" . $product['gambar'],
-                            "public/assets/images/products/" . $product['gambar'],
-                            "cabang/tasik/public/assets/images/products/" . $product['gambar'],
-                            "cabang/garut/public/assets/images/products/" . $product['gambar']
-                        ];
-                        
-                        foreach ($possiblePaths as $path) {
-                            if (file_exists($path)) {
-                                $imagePath = $path;
-                                $imageFound = true;
-                                break;
-                            }
-                        }
-                    }
-                    ?>
-                    
-                    <?php if ($imageFound): ?>
-                        <img src="<?= $imagePath ?>" 
+                    $imageUrl = getImageUrl($product['gambar']);
+                    if ($imageUrl): ?>
+                        <img src="<?= $imageUrl ?>" 
                              class="product-image" 
                              alt="<?= htmlspecialchars($product['nama_produk']) ?>">
                     <?php else: ?>

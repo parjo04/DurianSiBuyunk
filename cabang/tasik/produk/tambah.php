@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Handle file upload
     if (isset($_FILES['gambar']) && $_FILES['gambar']['error'] == UPLOAD_ERR_OK) {
         try {
-            $data['gambar'] = handleFileUpload($_FILES['gambar']);
+            $data['gambar'] = handleFileUpload($_FILES['gambar'], 'tasik');
         } catch (Exception $e) {
             $message = $e->getMessage();
             $messageType = 'danger';
