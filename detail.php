@@ -157,13 +157,20 @@ $pageTitle = htmlspecialchars($product['nama_produk']) . ' - Durian Si Buyunk';
         .stock-item {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
+            align-items: flex-start;
+            padding: 15px 0;
             border-bottom: 1px solid #dee2e6;
         }
 
         .stock-item:last-child {
             border-bottom: none;
+        }
+
+        .stock-badges {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            text-align: right;
         }
 
         .price-display {
@@ -313,8 +320,31 @@ $pageTitle = htmlspecialchars($product['nama_produk']) . ' - Durian Si Buyunk';
             <!-- Product Image -->
             <div class="col-lg-5 mb-3">
                 <div class="product-image-container">
-                    <?php if ($product['gambar'] && file_exists("assets/images/products/" . $product['gambar'])): ?>
-                        <img src="assets/images/products/<?= $product['gambar'] ?>" 
+                    <?php 
+                    $imageFound = false;
+                    $imagePath = '';
+                    
+                    if ($product['gambar']) {
+                        // Check multiple possible image locations
+                        $possiblePaths = [
+                            "assets/images/products/" . $product['gambar'],
+                            "public/assets/images/products/" . $product['gambar'],
+                            "cabang/tasik/public/assets/images/products/" . $product['gambar'],
+                            "cabang/garut/public/assets/images/products/" . $product['gambar']
+                        ];
+                        
+                        foreach ($possiblePaths as $path) {
+                            if (file_exists($path)) {
+                                $imagePath = $path;
+                                $imageFound = true;
+                                break;
+                            }
+                        }
+                    }
+                    ?>
+                    
+                    <?php if ($imageFound): ?>
+                        <img src="<?= $imagePath ?>" 
                              class="product-image" 
                              alt="<?= htmlspecialchars($product['nama_produk']) ?>">
                     <?php else: ?>
@@ -345,11 +375,8 @@ $pageTitle = htmlspecialchars($product['nama_produk']) . ' - Durian Si Buyunk';
 
                     <!-- Price Display -->
                     <div class="price-display">
-                        <h4 class="mb-1"><?= formatRupiah($product['harga']) ?></h4>
-                        <p class="mb-0">per <?= htmlspecialchars($product['satuan']) ?></p>
-                        <?php if ($product['harga_per_kg'] > 0): ?>
-                            <small>atau <?= formatRupiah($product['harga_per_kg']) ?> per kg</small>
-                        <?php endif; ?>
+                        <h4 class="mb-1"><?= formatRupiah($product['harga_per_kg']) ?></h4>
+                        <p class="mb-0">per kilogram</p>
                     </div>
 
                     <!-- Stock Info -->
@@ -364,12 +391,20 @@ $pageTitle = htmlspecialchars($product['nama_produk']) . ' - Durian Si Buyunk';
                                 <small class="text-muted">Jl. Raya Tasikmalaya No. 123</small>
                             </div>
                             <div class="text-end">
-                                <span class="badge <?= $product['stok_tasik'] > 0 ? 'bg-success' : 'bg-danger' ?>">
-                                    <?= $product['stok_tasik'] ?> <?= htmlspecialchars($product['satuan']) ?>
-                                </span>
-                                <?php if ($product['total_kg_tasik'] > 0): ?>
-                                    <br><small class="text-muted"><?= number_format($product['total_kg_tasik'], 2) ?> kg</small>
+                                <?php if ($product['total_pcs_tasik'] > 0): ?>
+                                    <br><span class="badge bg-info text-dark">
+                                        <i class="fas fa-apple-alt"></i> <?= $product['total_pcs_tasik'] ?> buah
+                                    </span>
                                 <?php endif; ?>
+                                <?php if ($product['total_kg_tasik'] > 0): ?>
+                                    <br><span class="badge bg-warning text-dark">
+                                        <i class="fas fa-weight"></i> <?= number_format($product['total_kg_tasik'], 2) ?> kg
+                                    </span>
+                                <?php endif; ?>
+                                <!-- <span class="badge <?= $product['stok_tasik'] > 0 ? 'bg-success' : 'bg-danger' ?> mb-1">
+                                    <i class="fas fa-box"></i> <?= $product['stok_tasik'] ?> <?= htmlspecialchars($product['satuan']) ?>
+                                </span> -->
+                                
                             </div>
                         </div>
 
@@ -381,11 +416,15 @@ $pageTitle = htmlspecialchars($product['nama_produk']) . ' - Durian Si Buyunk';
                                 <small class="text-muted">Jl. Raya Garut No. 456</small>
                             </div>
                             <div class="text-end">
-                                <span class="badge <?= $product['stok_garut'] > 0 ? 'bg-success' : 'bg-danger' ?>">
-                                    <?= $product['stok_garut'] ?> <?= htmlspecialchars($product['satuan']) ?>
-                                </span>
+                                <?php if ($product['total_pcs_garut'] > 0): ?>
+                                    <br><span class="badge bg-info text-dark">
+                                        <i class="fas fa-apple-alt"></i> <?= $product['total_pcs_garut'] ?> buah
+                                    </span>
+                                <?php endif; ?>
                                 <?php if ($product['total_kg_garut'] > 0): ?>
-                                    <br><small class="text-muted"><?= number_format($product['total_kg_garut'], 2) ?> kg</small>
+                                    <br><span class="badge bg-warning text-dark">
+                                        <i class="fas fa-weight"></i> <?= number_format($product['total_kg_garut'], 2) ?> kg
+                                    </span>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -474,8 +513,7 @@ $pageTitle = htmlspecialchars($product['nama_produk']) . ' - Durian Si Buyunk';
         // WhatsApp order functionality
         function orderViaWhatsApp(branch) {
             const productName = '<?= addslashes($product['nama_produk']) ?>';
-            const price = '<?= formatRupiah($product['harga']) ?>';
-            const unit = '<?= addslashes($product['satuan']) ?>';
+            const pricePerKg = '<?= formatRupiah($product['harga_per_kg']) ?>';
             
             const branchInfo = {
                 'tasik': {
@@ -501,7 +539,7 @@ $pageTitle = htmlspecialchars($product['nama_produk']) . ' - Durian Si Buyunk';
 
 Saya tertarik untuk memesan:
 📦 Produk: ${productName}
-💰 Harga: ${price} per ${unit}
+💰 Harga: ${pricePerKg} per kg
 🏪 Cabang: ${selectedBranch.name}
 
 Mohon informasi ketersediaan dan cara pemesanannya.

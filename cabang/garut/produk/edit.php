@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'kategori_id' => !empty($_POST['kategori_id']) ? (int)$_POST['kategori_id'] : null,
         'jenis_durian_id' => !empty($_POST['jenis_durian_id']) ? (int)$_POST['jenis_durian_id'] : null,
         'harga' => (float)$_POST['harga'],
-        'harga_per_kg' => (float)($_POST['harga_per_kg'] ?? $product['harga_per_kg']),
+        'harga_per_kg' => (float)$_POST['harga'], // Same as main price since default is kg
         'stok_tasik' => $product['stok_tasik'], // Keep existing Tasik stock
         'stok_garut' => (int)$_POST['stok_garut'],
         'total_kg_tasik' => $product['total_kg_tasik'], // Keep existing Tasik weight

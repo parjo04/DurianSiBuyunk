@@ -82,23 +82,89 @@ include __DIR__ . '/../../../includes/header.php';
                 </a>
             </div>
         <?php else: ?>
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Gambar</th>
-                            <th>Nama Produk</th>
-                            <th>Kategori</th>
-                            <th>Jenis Durian</th>
-                            <th>Harga</th>
-                            <th>Stok Garut</th>
-                            <th>Bobot (kg)</th>
-                            <th>Harga/kg</th>
-                            <th>Status</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+            <!-- Mobile/Tablet View -->
+            <div class="d-md-none">
+                <?php foreach ($products as $product): ?>
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-3">
+                                    <?php if ($product['gambar'] && file_exists("../../../public/assets/images/products/" . $product['gambar'])): ?>
+                                        <img src="../../../public/assets/images/products/<?= $product['gambar'] ?>" 
+                                             class="img-thumbnail w-100" style="height: 60px; object-fit: cover;">
+                                    <?php else: ?>
+                                        <div class="bg-light d-flex align-items-center justify-content-center" 
+                                             style="height: 60px; border-radius: 4px;">
+                                            <i class="fas fa-image text-muted"></i>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="col-9">
+                                    <h6 class="card-title mb-1"><?= htmlspecialchars($product['nama_produk']) ?></h6>
+                                    <div class="d-flex flex-wrap gap-1 mb-2">
+                                        <?php if ($product['nama_kategori']): ?>
+                                            <span class="badge bg-info text-xs"><?= htmlspecialchars($product['nama_kategori']) ?></span>
+                                        <?php endif; ?>
+                                        <?php if ($product['nama_jenis']): ?>
+                                            <span class="badge bg-warning text-dark text-xs"><?= htmlspecialchars($product['nama_jenis']) ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <small class="text-muted">Harga/kg:</small><br>
+                                            <?php if ($product['harga_per_kg']): ?>
+                                                <strong><?= formatRupiah($product['harga_per_kg']) ?></strong>
+                                            <?php else: ?>
+                                                <span class="text-muted">-</span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">Satuan:</small><br>
+                                            <span class="badge bg-secondary"><?= htmlspecialchars($product['satuan'] ?: 'kg') ?></span>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">Status:</small><br>
+                                            <span class="badge <?= $product['status'] === 'aktif' ? 'bg-success' : 'bg-secondary' ?>">
+                                                <?= ucfirst($product['status']) ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <a href="edit.php?id=<?= $product['id'] ?>" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                        <a href="../manajemen-stok/index.php" class="btn btn-sm btn-info">
+                                            <i class="fas fa-boxes"></i> Kelola Stok
+                                        </a>
+                                        <a href="hapus.php?id=<?= $product['id'] ?>" class="btn btn-sm btn-danger" 
+                                           onclick="return confirm('Yakin ingin menghapus produk ini?')">
+                                            <i class="fas fa-trash"></i> Hapus
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+
+            <!-- Desktop View -->
+            <div class="d-none d-md-block">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width: 60px;">Gambar</th>
+                                <th style="min-width: 200px;">Nama Produk</th>
+                                <th style="width: 120px;">Kategori</th>
+                                <th style="width: 120px;">Jenis</th>
+                                <th style="width: 130px;">Harga/kg</th>
+                                <th style="width: 100px;">Satuan</th>
+                                <th style="width: 80px;">Status</th>
+                                <th style="width: 160px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                         <?php foreach ($products as $product): ?>
                             <tr>
                                 <td>
@@ -132,53 +198,28 @@ include __DIR__ . '/../../../includes/header.php';
                                         <span class="text-muted">-</span>
                                     <?php endif; ?>
                                 </td>
-                                <td><?= formatRupiah($product['harga']) ?></td>
-                                <td>
-                                    <span class="badge <?= $product['stok'] < 5 ? 'bg-danger' : ($product['stok'] < 10 ? 'bg-warning' : 'bg-success') ?>">
-                                        <?= $product['stok'] ?> pcs
-                                    </span>
-                                    <?php if ($product['satuan']): ?>
-                                        <br><small class="text-muted"><?= htmlspecialchars($product['satuan']) ?></small>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <span class="text-success fw-bold">
-                                        <?= number_format($product['total_kg_garut'], 3) ?> kg
-                                    </span>
-                                    <?php if ($product['stok'] > 0): ?>
-                                        <br><small class="text-muted">
-                                            ~<?= number_format($product['total_kg_garut'] / $product['stok'], 3) ?> kg/pcs
-                                        </small>
-                                    <?php endif; ?>
-                                </td>
                                 <td>
                                     <?php if ($product['harga_per_kg']): ?>
-                                        <span class="text-primary fw-bold">
-                                            <?= formatRupiah($product['harga_per_kg']) ?>/kg
-                                        </span>
+                                        <span class="text-primary fw-bold"><?= formatRupiah($product['harga_per_kg']) ?></span>
+                                        <br><small class="text-muted">per kg</small>
                                     <?php else: ?>
                                         <span class="text-muted">-</span>
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <?php if ($product['stok'] == 0): ?>
-                                        <span class="badge bg-danger">Habis</span>
-                                    <?php elseif ($product['stok'] < 5): ?>
-                                        <span class="badge bg-warning">Menipis</span>
-                                    <?php else: ?>
-                                        <span class="badge bg-success">Tersedia</span>
-                                    <?php endif; ?>
+                                    <span class="badge bg-secondary"><?= htmlspecialchars($product['satuan'] ?: 'kg') ?></span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">Aktif</span>
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
                                         <a href="edit.php?id=<?= $product['id'] ?>" class="btn btn-outline-primary" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <button type="button" class="btn btn-outline-info" 
-                                                onclick="openStockModal(<?= $product['id'] ?>, '<?= htmlspecialchars($product['nama_produk']) ?>', <?= $product['stok'] ?>)" 
-                                                title="Update Stok">
-                                            <i class="fas fa-cubes"></i>
-                                        </button>
+                                        <a href="../manajemen-stok/index.php" class="btn btn-outline-info" title="Kelola Stok">
+                                            <i class="fas fa-boxes"></i>
+                                        </a>
                                         <a href="hapus.php?id=<?= $product['id'] ?>" class="btn btn-outline-danger" 
                                            onclick="return confirm('Yakin ingin menghapus produk ini?')" title="Hapus">
                                             <i class="fas fa-trash"></i>
@@ -187,8 +228,9 @@ include __DIR__ . '/../../../includes/header.php';
                                 </td>
                             </tr>
                         <?php endforeach; ?>
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         <?php endif; ?>
     </div>

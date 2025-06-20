@@ -145,20 +145,89 @@ include __DIR__ . '/../../../includes/header.php';
                 </a>
             </div>
         <?php else: ?>
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Produk</th>
-                            <th>Stok Saat Ini</th>
-                            <th>Bobot Total</th>
-                            <th>Harga/kg</th>
-                            <th>Nilai Stok</th>
-                            <th>Status</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+            <!-- Mobile/Tablet View -->
+            <div class="d-lg-none">
+                <?php foreach ($products as $product): ?>
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-3">
+                                    <?php if ($product['gambar'] && file_exists("../../../public/assets/images/products/" . $product['gambar'])): ?>
+                                        <img src="../../../public/assets/images/products/<?= $product['gambar'] ?>" 
+                                             class="img-thumbnail w-100" style="height: 50px; object-fit: cover;">
+                                    <?php else: ?>
+                                        <div class="bg-light d-flex align-items-center justify-content-center" 
+                                             style="height: 50px; border-radius: 4px;">
+                                            <i class="fas fa-image text-muted"></i>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="col-9">
+                                    <h6 class="card-title mb-1"><?= htmlspecialchars($product['nama_produk']) ?></h6>
+                                    <div class="d-flex flex-wrap gap-1 mb-2">
+                                        <?php if ($product['nama_kategori']): ?>
+                                            <span class="badge bg-info text-xs"><?= htmlspecialchars($product['nama_kategori']) ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <small class="text-muted">Stok:</small><br>
+                                            <span class="badge <?= $product['stok'] < 5 ? 'bg-danger' : ($product['stok'] < 10 ? 'bg-warning' : 'bg-success') ?>">
+                                                <?= $product['stok'] ?> pcs
+                                            </span>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">Bobot:</small><br>
+                                            <span class="text-success fw-bold"><?= number_format($product['total_kg_tasik'], 2) ?> kg</span>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">Harga/kg:</small><br>
+                                            <?php if ($product['harga_per_kg']): ?>
+                                                <span class="text-primary"><?= formatRupiah($product['harga_per_kg']) ?></span>
+                                            <?php else: ?>
+                                                <span class="text-muted">-</span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">Status:</small><br>
+                                            <?php if ($product['stok'] == 0): ?>
+                                                <span class="badge bg-danger">Habis</span>
+                                            <?php elseif ($product['stok'] < 5): ?>
+                                                <span class="badge bg-warning">Menipis</span>
+                                            <?php else: ?>
+                                                <span class="badge bg-success">Tersedia</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <button type="button" class="btn btn-sm btn-primary" 
+                                                onclick="openStockModal(<?= $product['id'] ?>, '<?= htmlspecialchars($product['nama_produk']) ?>', <?= $product['stok'] ?>, <?= $product['total_kg_tasik'] ?>)">
+                                            <i class="fas fa-warehouse"></i> Kelola
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+
+            <!-- Desktop View -->
+            <div class="d-none d-lg-block">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="min-width: 250px;">Produk</th>
+                                <th style="width: 120px;">Stok Saat Ini</th>
+                                <th style="width: 120px;">Bobot Total</th>
+                                <th style="width: 130px;">Harga/kg</th>
+                                <th style="width: 140px;">Nilai Stok</th>
+                                <th style="width: 100px;">Status</th>
+                                <th style="width: 120px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                         <?php foreach ($products as $product): ?>
                             <tr>
                                 <td>
@@ -238,6 +307,7 @@ include __DIR__ . '/../../../includes/header.php';
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+                </div>
             </div>
         <?php endif; ?>
     </div>
@@ -344,7 +414,10 @@ include __DIR__ . '/../../../includes/header.php';
     </div>
 </div>
 
-<?php include __DIR__ . '/../../../includes/footer.php'; ?>
+</div>
+</div>
+
+
 
 <script>
 function openStockModal(produkId, namaProduk, stokLama, bobotLama) {

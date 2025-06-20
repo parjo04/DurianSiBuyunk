@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'kategori_id' => !empty($_POST['kategori_id']) ? (int)$_POST['kategori_id'] : null,
         'jenis_durian_id' => !empty($_POST['jenis_durian_id']) ? (int)$_POST['jenis_durian_id'] : null,
         'harga' => (float)$_POST['harga'],
-        'harga_per_kg' => (float)$_POST['harga_per_kg'],
+        'harga_per_kg' => (float)$_POST['harga'], // Same as main price since default is kg
         'stok_tasik' => 0, // Default 0 for Garut admin
         'stok_garut' => (int)$_POST['stok_garut'],
         'total_kg_tasik' => 0, // Default 0 for Garut admin
@@ -144,8 +144,7 @@ include __DIR__ . '/../../../includes/header.php';
                             <div class="mb-3">
                                 <label for="satuan" class="form-label">Satuan *</label>
                                 <select class="form-select" id="satuan" name="satuan" required>
-                                    <option value="">Pilih Satuan</option>
-                                    <option value="kg" <?= isset($_POST['satuan']) && $_POST['satuan'] == 'kg' ? 'selected' : '' ?>>Kilogram (kg)</option>
+                                    <option value="kg" <?= (!isset($_POST['satuan']) || $_POST['satuan'] == 'kg') ? 'selected' : '' ?>>Kilogram (kg)</option>
                                     <option value="pcs" <?= isset($_POST['satuan']) && $_POST['satuan'] == 'pcs' ? 'selected' : '' ?>>Pieces (pcs)</option>
                                     <option value="box" <?= isset($_POST['satuan']) && $_POST['satuan'] == 'box' ? 'selected' : '' ?>>Box</option>
                                     <option value="cup" <?= isset($_POST['satuan']) && $_POST['satuan'] == 'cup' ? 'selected' : '' ?>>Cup</option>
@@ -156,25 +155,16 @@ include __DIR__ . '/../../../includes/header.php';
                     </div>
                     
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="harga" class="form-label">Harga Satuan (Rp) *</label>
+                                <label for="harga" class="form-label">Harga <span id="harga_unit">(per kg)</span> *</label>
                                 <input type="number" class="form-control" id="harga" name="harga" 
                                        value="<?= isset($_POST['harga']) ? $_POST['harga'] : '' ?>" 
                                        min="0" step="100" required>
-                                <div class="form-text">Harga per satuan produk</div>
+                                <div class="form-text">Harga per satuan yang dipilih</div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="harga_per_kg" class="form-label">Harga per Kg (Rp) *</label>
-                                <input type="number" class="form-control" id="harga_per_kg" name="harga_per_kg" 
-                                       value="<?= isset($_POST['harga_per_kg']) ? $_POST['harga_per_kg'] : '' ?>" 
-                                       min="0" step="100" required>
-                                <div class="form-text">Harga per kilogram</div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="stok_garut" class="form-label">Stok Awal (pcs) *</label>
                                 <input type="number" class="form-control" id="stok_garut" name="stok_garut" 
@@ -278,13 +268,31 @@ include __DIR__ . '/../../../includes/header.php';
                 `<span class="text-${avgWeight > 0 ? 'success' : 'muted'}">${avgWeight.toFixed(3)} kg/buah</span>`;
         }
         
+        // Update price label based on selected unit
+        function updatePriceLabel() {
+            const satuan = document.getElementById('satuan').value;
+            const hargaUnit = document.getElementById('harga_unit');
+            
+            const unitLabels = {
+                'kg': '(per kg)',
+                'pcs': '(per pcs)',
+                'box': '(per box)',
+                'cup': '(per cup)',
+                'gelas': '(per gelas)'
+            };
+            
+            hargaUnit.textContent = unitLabels[satuan] || '(per satuan)';
+        }
+        
         // Add event listeners
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('total_kg_garut').addEventListener('input', calculateAverageWeight);
             document.getElementById('stok_garut').addEventListener('input', calculateAverageWeight);
+            document.getElementById('satuan').addEventListener('change', updatePriceLabel);
             
-            // Calculate initial average
+            // Calculate initial average and set initial price label
             calculateAverageWeight();
+            updatePriceLabel();
         });
     </script>
 </body>

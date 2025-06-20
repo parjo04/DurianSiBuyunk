@@ -312,8 +312,8 @@ $products = getProducts($cabang_filter, $kategori_id, $search);
                             <?php endif; ?>
                             
                             <div class="product-image">
-                                <?php if ($product['gambar'] && file_exists("assets/images/products/" . $product['gambar'])): ?>
-                                    <img src="assets/images/products/<?= $product['gambar'] ?>" 
+                                <?php if ($product['gambar'] && file_exists("public/assets/images/products/" . $product['gambar'])): ?>
+                                    <img src="public/assets/images/products/<?= $product['gambar'] ?>" 
                                          class="card-img-top product-image" 
                                          alt="<?= htmlspecialchars($product['nama_produk']) ?>">
                                 <?php else: ?>

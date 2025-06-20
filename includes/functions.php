@@ -66,11 +66,13 @@ function getProducts($cabang_id = null, $kategori_id = null, $search = null) {
     }
 }
 
-// Get single product
+// Get single product by ID
 function getProduct($id) {
     try {
         $pdo = getConnection();
-        $stmt = $pdo->prepare("SELECT p.*, k.nama_kategori, jd.nama_jenis 
+        $stmt = $pdo->prepare("SELECT p.*, k.nama_kategori, jd.nama_jenis,
+                              COALESCE(p.total_kg_tasik, 0) as total_kg_tasik,
+                              COALESCE(p.total_kg_garut, 0) as total_kg_garut
                               FROM produk p 
                               LEFT JOIN kategori k ON p.kategori_id = k.id 
                               LEFT JOIN jenis_durian jd ON p.jenis_durian_id = jd.id 
@@ -80,6 +82,11 @@ function getProduct($id) {
     } catch (Exception $e) {
         return null;
     }
+}
+
+// Alias for getProduct for backward compatibility
+function getProductById($id) {
+    return getProduct($id);
 }
 
 // Add new product
@@ -283,4 +290,6 @@ function handleFileUpload($file, $uploadDir = UPLOAD_PATH) {
         throw new Exception('Gagal mengupload file.');
     }
 }
+
+// Note: formatRupiah() and sanitize() functions are already defined in config/config.php
 ?>
