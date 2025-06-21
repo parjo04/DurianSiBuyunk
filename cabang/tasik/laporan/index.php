@@ -257,12 +257,12 @@ include __DIR__ . '/../../../includes/header.php';
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <?php if ($movement['jenis_pergerakan'] === 'masuk'): ?>
+                                        <?php if ($movement['jenis_transaksi'] === 'masuk'): ?>
                                             <span class="badge bg-success">Masuk</span>
-                                        <?php elseif ($movement['jenis_pergerakan'] === 'keluar'): ?>
+                                        <?php elseif ($movement['jenis_transaksi'] === 'keluar'): ?>
                                             <span class="badge bg-danger">Keluar</span>
                                         <?php else: ?>
-                                            <span class="badge bg-info"><?= ucfirst($movement['jenis_pergerakan']) ?></span>
+                                            <span class="badge bg-info"><?= ucfirst($movement['jenis_transaksi']) ?></span>
                                         <?php endif; ?>
                                     </td>
                                     <td><?= $movement['jumlah_sebelum'] ?></td>
@@ -385,8 +385,8 @@ include __DIR__ . '/../../../includes/header.php';
                                             <strong><?= htmlspecialchars($movement['nama_produk']) ?></strong>
                                             <br><small class="text-muted"><?= date('d/m/Y H:i', strtotime($movement['created_at'])) ?></small>
                                         </div>
-                                        <span class="badge bg-<?= $movement['jenis_pergerakan'] === 'masuk' ? 'success' : 'danger' ?>">
-                                            <?= $movement['jenis_pergerakan'] === 'masuk' ? '+' : '' ?><?= $movement['selisih'] ?>
+                                        <span class="badge bg-<?= $movement['jenis_transaksi'] === 'masuk' ? 'success' : 'danger' ?>">
+                                            <?= $movement['jenis_transaksi'] === 'masuk' ? '+' : '' ?><?= $movement['selisih'] ?>
                                         </span>
                                     </div>
                                 </div>

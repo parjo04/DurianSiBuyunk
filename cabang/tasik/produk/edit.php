@@ -79,15 +79,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         // Log pergerakan stok jika ada perubahan
         if ($result['success'] && $stok_lama != $stok_baru) {
-            $jenis_pergerakan = 'update';
+            $jenis_transaksi = 'penyesuaian';
             if ($stok_baru > $stok_lama) {
-                $jenis_pergerakan = 'masuk';
+                $jenis_transaksi = 'masuk';
             } elseif ($stok_baru < $stok_lama) {
-                $jenis_pergerakan = 'keluar';
+                $jenis_transaksi = 'keluar';
             }
             
             $keterangan = "Update produk: {$product['nama_produk']} (Edit via form)";
-            logStokHistory($id, 'tasik', $jenis_pergerakan, $stok_lama, $stok_baru, $keterangan, $_SESSION['user_id']);
+            logStokHistory($id, 'tasik', $jenis_transaksi, $stok_lama, $stok_baru, $keterangan, $_SESSION['user_id']);
         }
         
         if ($result['success']) {
