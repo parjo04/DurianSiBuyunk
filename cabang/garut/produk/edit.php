@@ -80,11 +80,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($result['success']) {
             // Log stock change if different
             if ($stok_lama != $stok_baru) {
-                $jenis_pergerakan = $stok_baru > $stok_lama ? 'masuk' : 'keluar';
+                $jenis_transaksi = $stok_baru > $stok_lama ? 'masuk' : 'keluar';
                 logStokHistory(
                     $id,
                     'garut',
-                    $jenis_pergerakan,
+                    $jenis_transaksi,
                     $stok_lama,
                     $stok_baru,
                     'Update produk via form edit',

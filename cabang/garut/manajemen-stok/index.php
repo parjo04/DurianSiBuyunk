@@ -153,9 +153,9 @@ include __DIR__ . '/../../../includes/header.php';
                             <div class="row">
                                 <div class="col-3">
                                     <?php 
-                                    $imageUrl = getImageUrl($product['gambar']);
-                                    if ($imageUrl): ?>
-                                        <img src="../../../<?= $imageUrl ?>" 
+                                    $imagePath = getImagePath($product['gambar']);
+                                    if ($imagePath && file_exists("../../../" . $imagePath)): ?>
+                                        <img src="../../../<?= $imagePath ?>?v=<?= time() ?>" 
                                              class="img-thumbnail w-100" style="height: 50px; object-fit: cover;">
                                     <?php else: ?>
                                         <div class="bg-light d-flex align-items-center justify-content-center" 
@@ -235,9 +235,9 @@ include __DIR__ . '/../../../includes/header.php';
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <?php 
-                                        $imageUrl = getImageUrl($product['gambar']);
-                                        if ($imageUrl): ?>
-                                            <img src="../../../<?= $imageUrl ?>" 
+                                        $imagePath = getImagePath($product['gambar']);
+                                        if ($imagePath && file_exists("../../../" . $imagePath)): ?>
+                                            <img src="../../../<?= $imagePath ?>?v=<?= time() ?>" 
                                                  class="img-thumbnail me-3" style="width: 60px; height: 60px; object-fit: cover;">
                                         <?php else: ?>
                                             <div class="bg-light d-flex align-items-center justify-content-center me-3" 
@@ -260,7 +260,6 @@ include __DIR__ . '/../../../includes/header.php';
                                     <span class="h5 <?= $product['stok'] < 5 ? 'text-danger' : ($product['stok'] < 10 ? 'text-warning' : 'text-success') ?>">
                                         <?= $product['stok'] ?> pcs
                                     </span>
-                                    <br><small class="text-muted"><?= htmlspecialchars($product['satuan']) ?></small>
                                 </td>
                                 <td>
                                     <span class="h6 text-success">
