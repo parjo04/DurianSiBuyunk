@@ -132,22 +132,23 @@ function getCurrentStockReport($cabang) {
 }
 
 // Log stock history (simplified version)
-function logStokHistory($produk_id, $cabang, $jenis_pergerakan, $jumlah_sebelum, $jumlah_sesudah, $keterangan = '', $user_id = null) {
+function logStokHistory($produk_id, $cabang, $jenis_transaksi, $jumlah_sebelum, $jumlah_sesudah, $keterangan = '', $user_id = null) {
     $pdo = getConnection();
     
     $selisih = $jumlah_sesudah - $jumlah_sebelum;
+    $cabang_id = ($cabang === 'tasik') ? 1 : 2;
     
     try {
         $stmt = $pdo->prepare("
             INSERT INTO stok_history 
-            (produk_id, cabang, jenis_pergerakan, jumlah_sebelum, jumlah_sesudah, selisih, keterangan, user_id) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            (produk_id, cabang_id, cabang, jenis_transaksi, jumlah_sebelum, jumlah_sesudah, selisih, keterangan, user_id, stok_sebelum, stok_sesudah, jumlah) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         
         return $stmt->execute([
-            $produk_id, $cabang, $jenis_pergerakan, 
+            $produk_id, $cabang_id, $cabang, $jenis_transaksi, 
             $jumlah_sebelum, $jumlah_sesudah, $selisih, 
-            $keterangan, $user_id
+            $keterangan, $user_id, $jumlah_sebelum, $jumlah_sesudah, $selisih
         ]);
     } catch(PDOException $e) {
         error_log("Error logging stok history: " . $e->getMessage());

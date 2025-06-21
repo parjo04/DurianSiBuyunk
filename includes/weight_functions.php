@@ -34,23 +34,26 @@ function addStockWithWeight($produk_id, $cabang, $bobot_kg, $jumlah_pcs, $ketera
         ");
         $stmt->execute([$total_kg_sesudah, $total_pcs_sesudah, $total_pcs_sesudah, $produk_id]);
         
+        // Get cabang_id
+        $cabang_id = ($cabang === 'tasik') ? 1 : 2;
+        
         // Log to stok_history
         $stmt = $pdo->prepare("
             INSERT INTO stok_history 
-            (produk_id, cabang, jenis_pergerakan, 
+            (produk_id, cabang_id, cabang, jenis_transaksi, 
              jumlah_sebelum, jumlah_sesudah, selisih,
              total_kg_sebelum, total_kg_sesudah, 
              bobot_kg, jumlah_pcs, harga_per_kg_saat_itu,
-             keterangan, user_id) 
-            VALUES (?, ?, 'masuk', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             keterangan, user_id, stok_sebelum, stok_sesudah, jumlah) 
+            VALUES (?, ?, ?, 'masuk', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         
         $stmt->execute([
-            $produk_id, $cabang,
+            $produk_id, $cabang_id, $cabang,
             $total_pcs_sebelum, $total_pcs_sesudah, $jumlah_pcs,
             $total_kg_sebelum, $total_kg_sesudah,
             $bobot_kg, $jumlah_pcs, $current['harga_per_kg'],
-            $keterangan, $user_id
+            $keterangan, $user_id, $total_pcs_sebelum, $total_pcs_sesudah, $jumlah_pcs
         ]);
         
         $pdo->commit();
@@ -92,6 +95,9 @@ function reduceStockWithWeight($produk_id, $cabang, $bobot_kg, $jumlah_pcs, $ket
         $total_kg_sesudah = $total_kg_sebelum - $bobot_kg;
         $total_pcs_sesudah = $total_pcs_sebelum - $jumlah_pcs;
         
+        // Get cabang_id
+        $cabang_id = ($cabang === 'tasik') ? 1 : 2;
+        
         // Update produk stock
         $stmt = $pdo->prepare("
             UPDATE produk 
@@ -106,20 +112,20 @@ function reduceStockWithWeight($produk_id, $cabang, $bobot_kg, $jumlah_pcs, $ket
         // Log to stok_history
         $stmt = $pdo->prepare("
             INSERT INTO stok_history 
-            (produk_id, cabang, jenis_pergerakan, 
+            (produk_id, cabang_id, cabang, jenis_transaksi, 
              jumlah_sebelum, jumlah_sesudah, selisih,
              total_kg_sebelum, total_kg_sesudah, 
              bobot_kg, jumlah_pcs, harga_per_kg_saat_itu,
-             keterangan, user_id) 
-            VALUES (?, ?, 'keluar', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             keterangan, user_id, stok_sebelum, stok_sesudah, jumlah) 
+            VALUES (?, ?, ?, 'keluar', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         
         $stmt->execute([
-            $produk_id, $cabang,
+            $produk_id, $cabang_id, $cabang,
             $total_pcs_sebelum, $total_pcs_sesudah, -$jumlah_pcs,
             $total_kg_sebelum, $total_kg_sesudah,
             $bobot_kg, $jumlah_pcs, $current['harga_per_kg'],
-            $keterangan, $user_id
+            $keterangan, $user_id, $total_pcs_sebelum, $total_pcs_sesudah, -$jumlah_pcs
         ]);
         
         $pdo->commit();
@@ -153,6 +159,9 @@ function updateStockWithWeight($produk_id, $cabang, $new_total_kg, $new_total_pc
         $selisih_kg = $new_total_kg - $total_kg_sebelum;
         $selisih_pcs = $new_total_pcs - $total_pcs_sebelum;
         
+        // Get cabang_id
+        $cabang_id = ($cabang === 'tasik') ? 1 : 2;
+        
         // Update produk stock
         $stmt = $pdo->prepare("
             UPDATE produk 
@@ -165,27 +174,27 @@ function updateStockWithWeight($produk_id, $cabang, $new_total_kg, $new_total_pc
         $stmt->execute([$new_total_kg, $new_total_pcs, $new_total_pcs, $produk_id]);
         
         // Determine movement type
-        $jenis_pergerakan = 'update';
-        if ($selisih_pcs > 0) $jenis_pergerakan = 'masuk';
-        elseif ($selisih_pcs < 0) $jenis_pergerakan = 'keluar';
+        $jenis_transaksi = 'penyesuaian';
+        if ($selisih_pcs > 0) $jenis_transaksi = 'masuk';
+        elseif ($selisih_pcs < 0) $jenis_transaksi = 'keluar';
         
         // Log to stok_history
         $stmt = $pdo->prepare("
             INSERT INTO stok_history 
-            (produk_id, cabang, jenis_pergerakan, 
+            (produk_id, cabang_id, cabang, jenis_transaksi, 
              jumlah_sebelum, jumlah_sesudah, selisih,
              total_kg_sebelum, total_kg_sesudah, 
              bobot_kg, jumlah_pcs, harga_per_kg_saat_itu,
-             keterangan, user_id) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             keterangan, user_id, stok_sebelum, stok_sesudah, jumlah) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         
         $stmt->execute([
-            $produk_id, $cabang, $jenis_pergerakan,
+            $produk_id, $cabang_id, $cabang, $jenis_transaksi,
             $total_pcs_sebelum, $new_total_pcs, $selisih_pcs,
             $total_kg_sebelum, $new_total_kg,
             abs($selisih_kg), abs($selisih_pcs), $current['harga_per_kg'],
-            $keterangan, $user_id
+            $keterangan, $user_id, $total_pcs_sebelum, $new_total_pcs, $selisih_pcs
         ]);
         
         $pdo->commit();
