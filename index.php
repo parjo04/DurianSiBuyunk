@@ -193,7 +193,7 @@ $products = getProducts($cabang_filter, $kategori_id, $search);
 </head>
 <body class="bg-light">
     <!-- Admin Login Button -->
-    <a href="/DurianSiBuyunk/public/" class="admin-login-btn text-decoration-none" title="Login Admin">
+    <a href="public/" class="admin-login-btn text-decoration-none" title="Login Admin">
         <i class="fas fa-user-shield fa-lg"></i>
     </a>
 
